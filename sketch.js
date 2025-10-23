@@ -1,79 +1,158 @@
-let dur = 500;
-let timer;
-let X = 0;
-let Y = 0;
-let noiseLevel = 300;
-let noiseScale = 0.009;
-let angle = 0;
-let U;
-let F;
+let eyeSize = 30;
+let isBlinking = false;
+let shrinking = false;
+let Timer2 = 0;
+let bodycolor;
+let fadespeed = 10;
+let glowIntensity = 0;
+let glowColor;  
+let monsterX, monsterY;
+let monsterSize = 150;
+let isSpiky = false;
+let spikeSize = 10;
+let spikeCount = 12;
 
-let O;
-let r;
-let isPressed = false;
-let posX1 = 0;
-let posX2 = 0;
-let posY1 = 0;
-let posY2 = 0;
+
 function setup() {
-  let canvas = createCanvas(800, 500);
-   canvas.parent("p5-canvas-container");
-  timer = 190;
-  angleMode(DEGREES);
+  createCanvas(800, 500);
+  colorMode(HSB, 360, 100, 100, 1);
   background("black");
-}
+  monsterX = 400;
+  monsterY = 250;
 
-//createGraphics(){
+  bodycolor = random(0, 360);
+  glowColor = random(0, 360);
   
-//}
-
-function draw() {
-  posX1 = X;
-  posX2 = X;
-  posY1 = Y;
-  posY2 = Y;
-  console.log(isPressed);
-  angle = angle + 1;
-  timer++;
-  if (timer >= dur) {
-    X = random(50, 750);
-    Y = random(50, 750);
-    U = random(0, 255);
-    F = random(0, 255);
-    O = random(0, 255);
-    timer = 0;
-    fill(U, F, O);
-    stroke("white");
-    for (let r = 40; r >= 0; r -= 15) {
-      circle(X, Y, r);
-      
-      
+ 
+  for(let a=0;a<400;a+=70){
+    for(let b=0;b<400;b+=50){
+      for(let s = 0;s<10;s++){
+        let H = random(180,240);
+        let S = random(60,100);
+        let B = random(40,80);
+        let brightness = 20+s*8;
+        stroke('rgb(233,224,103)');
+        strokeWeight(4);
+        fill(H,S,B,5);
+        ellipse(a,b,random(30,70),200); 
+        rotate(50);
+      }
     }
   }
-
-  if (mouseIsPressed === true&&X-40<mouseX<X+40&&Y-40<mouseY<Y+40) {
-    isPressed = true;
-  }
-  if (isPressed === true) {
-    let sineValue = sin(angle * 6) * 80;
-    let noiseValue = noise(frameCount * 0.5) * 60;
-    let radDist = 15 + sineValue + noiseValue;
-    let M = radDist + 20;
-    let x = X + cos(angle) * radDist;
-    let y = Y + sin(angle) * radDist;
-    let l = X + cos(angle) * M;
-    let p = Y + sin(angle) * M;
-    //translate(x, y);
-    //rotate(angle);
-    fill(O, F, U);
-    circle(x, y, 5);
-    fill(U,O,F);
-    //rotate(-angle);
-    triangle(l, p, l + 5, p + 5, l - 5, p - 5);
-     //U=U+random(10,20);
-     // F=F+random(10,20);
-     //O=O+random(10,20);
-  }
 }
 
+function draw() {
+  //渐变
+  fill(random(180,360),random(30,60),random(70,90), 1 / fadespeed);
+  noStroke();
+  rect(0, 0, 800, 500);
+  
+  //mouseCatching
+  monsterX = lerp(monsterX, mouseX, 0.07);
+  monsterY = lerp(monsterY, mouseY, 0.07);
+  
+  // blink
+  Timer2 += 1;
+  if (Timer2 > 100) {
+    isBlinking = true;
+    Timer2 = 0;
+  }
+  if (isBlinking) {
+    eyeSize = lerp(eyeSize, 5, 0.3);
+    if (eyeSize < 6) isBlinking = false;
+  } else {
+    eyeSize = lerp(eyeSize, 30, 0.3);
+  }
 
+  
+  
+  
+ //glow
+  glowIntensity = lerp(glowIntensity, random(0.3, 0.8), 0.02);
+  if (frameCount % 60 === 0) {
+    glowColor = (glowColor + random(-30, 30)) % 360;
+  }
+  
+
+  fill(glowColor, 80, 100, glowIntensity);
+  noStroke();
+  circle(monsterX, monsterY, monsterSize + 30);
+  
+  fill(glowColor, 80, 100, glowIntensity * 0.5);
+  circle(monsterX, monsterY, monsterSize + 50);
+  
+  fill(glowColor, 80, 100, glowIntensity * 0.35);
+  circle(monsterX, monsterY, monsterSize + 70);
+  
+  // body
+  fill(bodycolor, 85, 90);
+  noStroke();
+  circle(monsterX, monsterY, monsterSize);
+  
+  
+  
+  // bodySize
+  if(monsterSize >= 300){
+    shrinking = true;
+  }
+    
+  if(shrinking){
+    monsterSize = lerp(monsterSize, 150, 0.05);
+    if(monsterSize <= 165){
+      monsterSize = 150;
+      shrinking = false;
+    }
+  }
+  
+  //spike
+  if (isSpiky===true) {
+  for (let i = 0; i < spikeCount; i++) {
+      let angle = map(i, 0, spikeCount, 0, TWO_PI);
+      fill(random(0,360),80,90);
+      noStroke();
+      triangle(monsterX, monsterY, 
+               monsterX + cos(angle) * (monsterSize / 2 + spikeSize+10), 
+               monsterY + sin(angle) * (monsterSize / 2 + spikeSize+10), 
+               monsterX + cos(angle + PI/15) * (monsterSize / 2 + spikeSize/2), 
+               monsterY + sin(angle + PI/15) * (monsterSize / 2 + spikeSize/2));}
+  }
+     
+    
+    
+    // eyes
+  fill(360, 0, 100);
+  ellipse(monsterX - 40, monsterY - 20, eyeSize + 15, eyeSize + 10);
+  fill(0, 0, 0);
+  ellipse(monsterX - 40, monsterY - 20, eyeSize / 2, eyeSize / 2);
+
+  fill(360, 0, 100);
+  ellipse(monsterX + 40, monsterY - 20, eyeSize + 15, eyeSize + 10);
+  fill(0, 0, 0);
+  ellipse(monsterX + 40, monsterY - 20, eyeSize / 2, eyeSize / 2);
+  
+  // mouse
+  noFill();
+  stroke(0, 0, 0);
+  strokeWeight(4);
+  arc(monsterX, monsterY + 20, 60, 40, 0, PI);
+  strokeWeight(1);
+  
+    }
+  
+  
+
+//interaction
+function mousePressed() {
+  bodycolor = random(0, 360);
+  monsterSize = monsterSize + 15;
+  glowIntensity = 1;  
+  
+  
+  
+  
+}
+
+function keyPressed(){
+  if(keyCode ===32){
+  isSpiky = !isSpiky;}
+}
